@@ -40,6 +40,27 @@ layer.Points = []layermanager.Point{{X: 0, Y: 0}, {X: 10, Y: 5}}
 layer.Lines = []layermanager.Line{{X1: 0, Y1: 0, X2: 10, Y2: 5}}
 ```
 
+## PolylineLayer
+
+`PolylineLayer` is a convenience layer for working with connected paths rather than a list of independent line segments. It embeds `GeometryLayer` and stores a slice of `Polyline` values, where each `Polyline` is just a sequence of `Point` values.
+
+This makes it easy to model roads, tracks, contours, or other connected shapes without manually splitting each path into many `Line` entries yourself.
+
+When you add a polyline with `AddPolyline`, the layer automatically converts each consecutive pair of points into a segment and appends those segments to the underlying `Lines` slice. This means the polyline still renders through the same geometry pipeline used by `GeometryLayer`.
+
+```go
+layer := layermanager.NewPolylineLayer()
+polyline := layermanager.NewPolyline([]layermanager.Point{
+    {X: 0, Y: 0},
+    {X: 5, Y: 2},
+    {X: 10, Y: 2},
+})
+
+layer.AddPolyline(polyline)
+```
+
+`PolylineLayer` also keeps the original `Polylines` slice, so higher-level code can inspect or manipulate the route as a connected path while preserving the rendered line segments for display.
+
 ## LayerManager
 
 `LayerManager` combines multiple `GeometryLayer` instances into a single interactive canvas. It manages the shared projection, renders the layers in order, and provides helpers for:
