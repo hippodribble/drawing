@@ -1,12 +1,24 @@
-package drawing
+package layermnanager
 
 // PolylineLayer is a widget that represents a layer of polylines that can be drawn on a canvas. 
 // It extends the GeometryLayer to hold a collection of polylines, which are sequences of connected 
 // points. The layer can be rendered with specified stroke width and color, and it provides methods 
 // for adding and clearing polylines, as well as calculating the limits of the polylines in the layer.
 type PolylineLayer struct {
-	GeometryLayer
+	*GeometryLayer
 	Polylines []Polyline
+}
+
+// NewPolylineLayer creates a new PolylineLayer with an embedded GeometryLayer. 
+// It initializes the layer with an empty slice for polylines and sets up the 
+// necessary properties for rendering and interaction.
+// The GeometryLayer must be a reference type, so we use a pointer to it. 
+func NewPolylineLayer() *PolylineLayer {
+	layer := &PolylineLayer{
+		GeometryLayer: NewGeometryLayer(),
+	}
+	// layer.ExtendBaseWidget(layer)
+	return layer
 }
 
 // AddPolyline adds a new polyline to the PolylineLayer. It appends the given polyline to the Polylines 
@@ -57,5 +69,7 @@ func (pl *PolylineLayer) Limits() (minX, minY, maxX, maxY float32) {
 }
 
 func (pl *PolylineLayer) AttachTo(m *LayerManager) {
-	m.AddLayer(&pl.GeometryLayer)
+	m.AddLayer(pl.GeometryLayer)
+	pl.Projection=m.Projection()
+	m.Refresh()
 }

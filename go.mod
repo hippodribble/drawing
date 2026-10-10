@@ -1,10 +1,9 @@
-module github.com.hippodribble/drawing
+module github.com/hippodribble/drawing
 
 go 1.26.0
 
 require (
 	fyne.io/fyne/v2 v2.8.1
-	github.com/hippodribble/drawing v0.1.0
 	github.com/hippodribble/seismic v0.1.0
 	golang.org/x/image v0.47.0
 )

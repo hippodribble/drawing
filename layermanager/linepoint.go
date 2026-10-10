@@ -1,4 +1,4 @@
-package drawing
+package layermnanager
 
 // Point represents a point in 2D space with X and Y coordinates.
 type Point struct {

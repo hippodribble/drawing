@@ -6,7 +6,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	drawing "github.com.hippodribble/drawing/layermanager"
+	layermanager "github.com/hippodribble/drawing/layermanager"
 )
 
 var winMain fyne.Window
@@ -21,29 +21,28 @@ func main() {
 
 func gui() fyne.CanvasObject {
 	// Create a new polyline layer
-	polylineLayer := &drawing.PolylineLayer{}
+	polylineLayer := &layermanager.PolylineLayer{}
 
 	// Add a sample polyline
-	polyline := drawing.Polyline{
-		Points: []drawing.Point{
+	polyline := layermanager.Polyline{
+		Points: []layermanager.Point{
 			{X: 0, Y: 0},
 			{X: 100, Y: 100},
 			{X: 200, Y: 50},
 		},
 	}
 	polylineLayer.AddPolyline(polyline)
-	polylineLayer.SetStrokeWidth(2)
+	polylineLayer.SetStrokeWidth(5)
 	polylineLayer.SetStrokeColor(theme.Color(theme.ColorNameForeground))
 
-	layermanager := drawing.NewLayerManager(drawing.NewUnitProjection())
+	layermanager := layermanager.NewLayerManager()
 
-	top:=widget.NewButton("Draw",func() {
-	polylineLayer.AttachTo(layermanager)
-	layermanager.RefreshLayers()
-	layermanager.ShowAll()
+	top := widget.NewButton("Draw", func() {
+		polylineLayer.AttachTo(layermanager)
+		layermanager.RefreshLayers()
+		layermanager.ShowAll()
 
 	})
-
 
 	// Return the polyline layer as the content of the window
 

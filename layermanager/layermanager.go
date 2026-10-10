@@ -1,4 +1,4 @@
-package drawing
+package layermnanager
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 )
 
 type AttachableLayer interface {
-    AttachTo(*LayerManager)
+	AttachTo(*LayerManager)
 }
 
 // LayerManager is a widget that manages multiple GeometryLayer instances, allowing for the organization and rendering of geometric shapes on a canvas. It provides functionality for adding, removing, and clearing layers, as well as managing the projection used for coordinate transformations. The LayerManager also handles mouse events for drawing and zooming, and it can communicate status updates through a channel.
@@ -28,9 +28,9 @@ type LayerManager struct {
 }
 
 // NewLayerManager creates a new LayerManager with the given projection and an optional list of GeometryLayer instances. It initializes the LayerManager with the specified projection, sets up the stack container for rendering the layers, and prepares it for interaction.
-func NewLayerManager(proj *Projection, layers ...*GeometryLayer) *LayerManager {
+func NewLayerManager(layers ...*GeometryLayer) *LayerManager {
 	v := &LayerManager{
-		projection: proj,
+		projection: NewUnitProjection(),
 		Layers:     layers,
 		margin:     .1,
 	}
@@ -77,8 +77,8 @@ func (v *LayerManager) SetDrawMode(draw bool) {
 func (v *LayerManager) RefreshLayers() {
 	for _, layer := range v.Layers {
 		layer.Projection = v.projection
-		layer.Refresh()
 	}
+	v.Refresh()
 }
 
 // AddLayer adds a new GeometryLayer to the LayerManager, setting its projection to the current projection and updating the stack container to include the new layer.
@@ -167,6 +167,9 @@ func (v *LayerManager) ShowAll() {
 
 	proj := NewProjection(mousePos, worldPos, scale)
 	v.SetProjection(proj)
+	if v.statusChannel != nil {
+		v.statusChannel <- fmt.Sprintf("ShowAll: minX=%f, minY=%f, maxX=%f, maxY=%f, scale=%f", minX, minY, maxX, maxY, scale)
+	}
 
 }
 

@@ -1,4 +1,4 @@
-package drawing
+package layermnanager
 
 import (
 	"fyne.io/fyne/v2"
@@ -23,7 +23,6 @@ type GeometryLayerRenderer struct {
 // IN LAYOUT, WE DO NOT CALL REFRESH - THE RENDERER'S REFRESH CALLS LAYOUT!
 func (r *GeometryLayerRenderer) Layout(size fyne.Size) {
 
-	r.Sync()
 	for i, line := range r.layer.Lines {
 		p1 := r.layer.Projection.ToScreen(fyne.NewPos(float32(line.X1), float32(line.Y1)))
 		p2 := r.layer.Projection.ToScreen(fyne.NewPos(float32(line.X2), float32(line.Y2)))
@@ -110,6 +109,7 @@ func (r *GeometryLayerRenderer) Sync() {
 			r.objects = append(r.objects, point)
 		}
 	}
+
 }
 
 // Sync2 is dumb. It creates all lines and circles and object

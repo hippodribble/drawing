@@ -5,10 +5,10 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"github.com/hippodribble/drawing"
+	layermanager "github.com/hippodribble/drawing/layermanager"
 )
 
-var viewport *drawing.LayerManager
+var viewport *layermanager.LayerManager
 var top *fyne.Container
 var centre *fyne.Container
 var status = widget.NewLabel("Status: Ready")
@@ -26,8 +26,7 @@ func main() {
 
 func gui() fyne.CanvasObject {
 	go monitorStatusUpdates()
-	proj := drawing.NewUnitProjection()
-	viewport = drawing.NewLayerManager(proj, nil)
+	viewport = layermanager.NewLayerManager()
 	viewport.SetStatusChannel(statusChannel)
 	centre = container.NewStack(viewport)
 	top = container.NewHBox(

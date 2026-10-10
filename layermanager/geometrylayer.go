@@ -1,4 +1,4 @@
-package drawing
+package layermnanager
 
 import (
 	"image/color"
@@ -39,6 +39,9 @@ func (layer *GeometryLayer) CreateRenderer() fyne.WidgetRenderer {
 // SetProjection sets the projection for the GeometryLayer and refreshes the layer to reflect the new projection. The projection is used to convert between world and screen coordinates when rendering the points and lines in the layer.
 func (gl *GeometryLayer) SetProjection(proj *Projection) {
 	gl.Projection = proj
+	if gl.statusChannel != nil {
+		gl.statusChannel <- "Projection changed to " + proj.String()
+	}
 	gl.Refresh()
 }
 
@@ -124,6 +127,6 @@ func (gl *GeometryLayer) SetFillColor(color color.Color) {
 }
 
 func (g *GeometryLayer) AttachTo(m *LayerManager) {
-    m.AddLayer(g)
+	m.AddLayer(g)
+	g.Projection = m.Projection()
 }
-

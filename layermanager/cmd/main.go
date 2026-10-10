@@ -9,12 +9,13 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"github.com/hippodribble/drawing"
+	layermanager "github.com/hippodribble/drawing/layermanager"
+
 	"golang.org/x/image/colornames"
 )
 
-var viewport *drawing.LayerManager
-var dragLayer *drawing.GeometryLayer
+var viewport *layermanager.LayerManager
+var dragLayer *layermanager.GeometryLayer
 var top *fyne.Container
 var centre *fyne.Container
 var status = widget.NewLabel("Status: Ready")
@@ -31,10 +32,9 @@ func main() {
 
 func gui() fyne.CanvasObject {
 	go monitorStatusUpdates()
-	proj := drawing.NewUnitProjection()
-	viewport = drawing.NewLayerManager(proj, nil)
+	viewport = layermanager.NewLayerManager()
 	viewport.SetStatusChannel(statusChannel)
-	dragLayer = drawing.NewGeometryLayer(proj)
+	dragLayer = layermanager.NewGeometryLayer()
 	dragLayer.StrokeColor = theme.Color(theme.ColorNameForeground)
 	dragLayer.StrokeWidth = 2.0
 	viewport.AddLayer(dragLayer)
@@ -89,36 +89,35 @@ func randColor2() color.Color {
 
 func addDummyPointLayer() {
 	for range 100 {
-		layer := makeDummyPointLayer(100, viewport.Projection())
-		viewport.AddLayer(layer)
-
+		layer := makeDummyPointLayer(100)
+		layer.AttachTo(viewport)
 	}
 	viewport.ShowAll()
 	viewport.RefreshLayers()
 }
 
 func addDummyLineLayer() {
-	layer := makeDummyLineLayer(rand.Intn(10)+5, viewport.Projection())
-	viewport.AddLayer(layer)
+	layer := makeDummyLineLayer(rand.Intn(10) + 5)
+	layer.AttachTo(viewport)
 	viewport.ShowAll()
 	viewport.RefreshLayers()
 }
 
 func addDummyPointLineLayer() {
-	layer := makeDummyPointLineLayer(rand.Intn(10)+5, viewport.Projection())
-	viewport.AddLayer(layer)
+	layer := makeDummyPointLineLayer(rand.Intn(10) + 5)
+	layer.AttachTo(viewport)
 	viewport.ShowAll()
 	viewport.RefreshLayers()
 }
 
-func makeDummyPointLayer(numPoints int, proj *drawing.Projection) *drawing.GeometryLayer {
-	layer := drawing.NewGeometryLayer(proj)
+func makeDummyPointLayer(numPoints int) *layermanager.GeometryLayer {
+	layer := layermanager.NewGeometryLayer()
 	x0 := rand.NormFloat64() * 20
 	y0 := rand.NormFloat64() * 10
 	for i := 0; i < numPoints; i++ {
 		x := rand.NormFloat64() + x0
 		y := rand.NormFloat64() + y0
-		point := drawing.NewPoint(x, y)
+		point := layermanager.NewPoint(x, y)
 		layer.Points = append(layer.Points, point)
 	}
 	layer.StrokeWidth = 2
@@ -126,42 +125,40 @@ func makeDummyPointLayer(numPoints int, proj *drawing.Projection) *drawing.Geome
 	return layer
 }
 
-func makeDummyLineLayer(numLines int, proj *drawing.Projection) *drawing.GeometryLayer {
-	layer := drawing.NewGeometryLayer(proj)
+func makeDummyLineLayer(numLines int) *layermanager.GeometryLayer {
+	layer := layermanager.NewGeometryLayer()
 	for i := 0; i < numLines; i++ {
 		x1 := rand.NormFloat64()
 		y1 := rand.NormFloat64()
 		x2 := rand.NormFloat64()
 		y2 := rand.NormFloat64()
-		line := drawing.NewLine(x1, y1, x2, y2)
+		line := layermanager.NewLine(x1, y1, x2, y2)
 		layer.Lines = append(layer.Lines, line)
-		layer.StrokeWidth = 1
-		layer.StrokeColor = randColor()
 	}
 	layer.StrokeWidth = 1
 	layer.StrokeColor = randColor()
 	return layer
 }
 
-func makeDummyPointLineLayer(numPointsLines int, proj *drawing.Projection) *drawing.GeometryLayer {
-	layer := drawing.NewGeometryLayer(proj)
+func makeDummyPointLineLayer(numPointsLines int) *layermanager.GeometryLayer {
+	layer := layermanager.NewGeometryLayer()
 	for i := 0; i < numPointsLines; i++ {
 		x := rand.NormFloat64()
 		y := rand.NormFloat64()
-		point := drawing.NewPoint(x, y)
+		point := layermanager.NewPoint(x, y)
 		layer.Points = append(layer.Points, point)
 
 		x1 := rand.NormFloat64()
 		y1 := rand.NormFloat64()
 		x2 := rand.NormFloat64()
 		y2 := rand.NormFloat64()
-		line := drawing.NewLine(x1, y1, x2, y2)
+		line := layermanager.NewLine(x1, y1, x2, y2)
 		layer.Lines = append(layer.Lines, line)
 	}
 	for i := 0; i < numPointsLines; i++ {
 		x := rand.NormFloat64()
 		y := rand.NormFloat64()
-		point := drawing.NewPoint(x, y)
+		point := layermanager.NewPoint(x, y)
 		layer.Points = append(layer.Points, point)
 	}
 	layer.StrokeWidth = 1
