@@ -47,12 +47,6 @@ func (r *GeometryLayerRenderer) MinSize() fyne.Size {
 func (r *GeometryLayerRenderer) Refresh() {
 	r.Sync()
 	r.Layout(r.layer.Size())
-	// for _, s := range r.lines {
-	// 	s.Refresh()
-	// }
-	// for _, p := range r.points {
-	// 	p.Refresh()
-	// }
 }
 
 func (r *GeometryLayerRenderer) Objects() []fyne.CanvasObject {
@@ -98,6 +92,7 @@ func (r *GeometryLayerRenderer) Sync() {
 		point.FillColor = r.layer.StrokeColor
 		point.StrokeWidth = r.layer.StrokeWidth / 2
 		point.StrokeColor = r.layer.StrokeColor
+		point.FillColor = r.layer.fillColor
 	}
 
 	if changed {
@@ -133,6 +128,7 @@ func (r *GeometryLayerRenderer) Sync2() {
 		r.points[i] = canvas.NewCircle(r.layer.StrokeColor)
 		r.points[i].StrokeWidth = r.layer.StrokeWidth / 2
 		r.points[i].StrokeColor = r.layer.StrokeColor
+		r.points[i].FillColor = r.layer.fillColor
 	}
 	r.objects = make([]fyne.CanvasObject, nLines+nPoints)
 	for i, line := range r.lines {

@@ -9,6 +9,10 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+type AttachableLayer interface {
+    AttachTo(*LayerManager)
+}
+
 // LayerManager is a widget that manages multiple GeometryLayer instances, allowing for the organization and rendering of geometric shapes on a canvas. It provides functionality for adding, removing, and clearing layers, as well as managing the projection used for coordinate transformations. The LayerManager also handles mouse events for drawing and zooming, and it can communicate status updates through a channel.
 type LayerManager struct {
 	widget.BaseWidget
@@ -24,7 +28,7 @@ type LayerManager struct {
 }
 
 // NewLayerManager creates a new LayerManager with the given projection and an optional list of GeometryLayer instances. It initializes the LayerManager with the specified projection, sets up the stack container for rendering the layers, and prepares it for interaction.
-func NewLayerManager(proj *Projection, layers []*GeometryLayer) *LayerManager {
+func NewLayerManager(proj *Projection, layers ...*GeometryLayer) *LayerManager {
 	v := &LayerManager{
 		projection: proj,
 		Layers:     layers,

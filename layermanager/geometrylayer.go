@@ -7,50 +7,21 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// Point represents a point in 2D space with X and Y coordinates.
-type Point struct {
-	X, Y float64
-}
-
-// NewPoint creates a new Point with the given X and Y coordinates.
-func NewPoint(x1, y1 float64) Point {
-	return Point{
-		X: x1,
-		Y: y1,
-	}
-}
-
-// Line represents a line segment in 2D space defined by two endpoints (X1, Y1) and (X2, Y2).
-type Line struct {
-	X1, Y1 float64
-	X2, Y2 float64
-}
-
-// NewLine creates a new Line with the given endpoints (X1, Y1) and (X2, Y2).
-func NewLine(x1, y1, x2, y2 float64) Line {
-	return Line{
-		X1: x1,
-		Y1: y1,
-		X2: x2,
-		Y2: y2,
-	}
-}
-
 // GeometryLayer is a widget that represents a layer of geometric shapes (points and lines) that can be drawn on a canvas. It holds a collection of points and lines, along with a projection for converting between world and screen coordinates. The layer can be rendered with specified stroke width and color.
 type GeometryLayer struct {
 	widget.BaseWidget
-	Points        []Point
-	Lines         []Line
-	Projection    *Projection
-	statusChannel chan string
-	StrokeWidth   float32
-	StrokeColor   color.Color
+	Points                 []Point
+	Lines                  []Line
+	Projection             *Projection
+	statusChannel          chan string
+	StrokeWidth            float32
+	StrokeColor, fillColor color.Color
 }
 
 // NewGeometryLayer creates a new GeometryLayer with the given projection. It initializes the layer with empty slices for points and lines, and sets the stroke width and color to default values.
-func NewGeometryLayer(proj *Projection) *GeometryLayer {
+func NewGeometryLayer() *GeometryLayer {
 	layer := &GeometryLayer{
-		Projection: proj,
+		Projection: NewUnitProjection(),
 	}
 	layer.ExtendBaseWidget(layer)
 	return layer
@@ -136,3 +107,23 @@ func (gl *GeometryLayer) Clear() {
 	gl.Lines = []Line{}
 	gl.Refresh()
 }
+
+func (gl *GeometryLayer) SetStrokeWidth(width float32) {
+	gl.StrokeWidth = width
+	gl.Refresh()
+}
+
+func (gl *GeometryLayer) SetStrokeColor(color color.Color) {
+	gl.StrokeColor = color
+	gl.Refresh()
+}
+
+func (gl *GeometryLayer) SetFillColor(color color.Color) {
+	gl.fillColor = color
+	gl.Refresh()
+}
+
+func (g *GeometryLayer) AttachTo(m *LayerManager) {
+    m.AddLayer(g)
+}
+

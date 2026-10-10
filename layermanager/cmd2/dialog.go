@@ -98,7 +98,7 @@ func loadP190FromFile(reader fyne.URIReadCloser) {
 	preplot.StrokeColor = theme.Color(theme.ColorNameForeground)
 	preplot.StrokeWidth = 1.0
 	viewport.ClearLayers()
-	viewport.AddLayer(preplot)
+	preplot.AttachTo(viewport)
 	status.SetText(fmt.Sprintf("Loaded %d lines from %s", len(thelines), filename))
 	viewport.ShowAll()
 
