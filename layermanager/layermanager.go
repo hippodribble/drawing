@@ -82,6 +82,7 @@ func (v *LayerManager) RefreshLayers() {
 }
 
 // AddLayer adds a new GeometryLayer to the LayerManager, setting its projection to the current projection and updating the stack container to include the new layer.
+// deprecated: Use AttachTo method of GeometryLayer instead.
 func (v *LayerManager) AddLayer(layer *GeometryLayer) {
 	layer.Projection = v.projection
 	v.Layers = append(v.Layers, layer)
