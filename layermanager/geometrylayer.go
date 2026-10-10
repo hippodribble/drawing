@@ -4,6 +4,7 @@ import (
 	"image/color"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -22,6 +23,8 @@ type GeometryLayer struct {
 func NewGeometryLayer() *GeometryLayer {
 	layer := &GeometryLayer{
 		Projection: NewUnitProjection(),
+		StrokeWidth: 1,
+		StrokeColor: theme.Color(theme.ColorNameForeground),
 	}
 	layer.ExtendBaseWidget(layer)
 	return layer
@@ -111,16 +114,20 @@ func (gl *GeometryLayer) Clear() {
 	gl.Refresh()
 }
 
+// sets the stroke width for the GeometryLayer and refreshes the layer to reflect the new stroke width. The stroke width determines how thick the lines and points will be drawn on the canvas.
+//  - If you don't do this, the line won't be visible
 func (gl *GeometryLayer) SetStrokeWidth(width float32) {
 	gl.StrokeWidth = width
 	gl.Refresh()
 }
-
+// sets the stroke color for the GeometryLayer and refreshes the layer to reflect the new stroke color. The stroke color determines the color used to draw the lines and points on the canvas.
+// - If you don't do this, the line won't be visible
 func (gl *GeometryLayer) SetStrokeColor(color color.Color) {
 	gl.StrokeColor = color
 	gl.Refresh()
 }
 
+// used when making points - it is the interior of the circle that represents points. 
 func (gl *GeometryLayer) SetFillColor(color color.Color) {
 	gl.fillColor = color
 	gl.Refresh()

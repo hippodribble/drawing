@@ -30,12 +30,18 @@ A polyline is represented by multiple `Line` values, which keeps the model simpl
 - `StrokeWidth` and `StrokeColor` for rendering style
 - an optional status channel for feedback
 
+The layer will not draw visible points or lines unless a stroke width and stroke color are configured. In practice, set them before or after adding geometry, for example with `SetStrokeWidth(...)` and `SetStrokeColor(...)`.
+
 Layers are intended to be independent overlays that can be added, removed, cleared, or reused as needed.
 
 Typical usage looks like this:
 
 ```go
+import "image/color"
+
 layer := layermanager.NewGeometryLayer()
+layer.SetStrokeWidth(2)
+layer.SetStrokeColor(color.Black)
 layer.Points = []layermanager.Point{{X: 0, Y: 0}, {X: 10, Y: 5}}
 layer.Lines = []layermanager.Line{{X1: 0, Y1: 0, X2: 10, Y2: 5}}
 ```

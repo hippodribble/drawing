@@ -10,7 +10,6 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/storage"
-	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	layermanager "github.com/hippodribble/drawing/layermanager"
 	"github.com/hippodribble/seismic/P190"
@@ -81,27 +80,6 @@ func loadP190FromFile(reader fyne.URIReadCloser) {
 		return
 	}
 
-	// thelines := []layermanager.Line{}
-	// for _, line := range p190File.Lines {
-	// 	thepoints := []layermanager.Point{}
-
-	// 	for _, r := range *line.Records {
-	// 		thepoints = append(thepoints, layermanager.Point{X: r.Easting, Y: r.Northing})
-	// 	}
-	// 	for i := 0; i < len(thepoints)-1; i++ {
-	// 		l := layermanager.Line{X1: thepoints[i].X, Y1: thepoints[i].Y, X2: thepoints[i+1].X, Y2: thepoints[i+1].Y}
-	// 		thelines = append(thelines, l)
-	// 	}
-	// }
-	// preplot := layermanager.NewGeometryLayer()
-	// preplot.Lines = thelines
-	// preplot.StrokeColor = theme.Color(theme.ColorNameForeground)
-	// preplot.StrokeWidth = 1.0
-	// viewport.ClearLayers()
-	// preplot.AttachTo(viewport)
-	// status.SetText(fmt.Sprintf("Loaded %d lines from %s", len(thelines), filename))
-	// viewport.ShowAll()
-
 	polylineLayer := layermanager.NewPolylineLayer()
 
 	thepolylines := []layermanager.Polyline{}
@@ -115,13 +93,10 @@ func loadP190FromFile(reader fyne.URIReadCloser) {
 		polylineLayer.AddPolyline(polyline)
 	}
 	polylineLayer.Polylines = thepolylines
-	polylineLayer.StrokeColor = theme.Color(theme.ColorNameForeground)
-	polylineLayer.StrokeWidth = 1.0
 	viewport.ClearLayers()
 	polylineLayer.AttachTo(viewport)
 	status.SetText(fmt.Sprintf("Loaded %d polylines from %s", len(thepolylines), filename))
 	viewport.ShowAll()
-
 }
 
 func showP190TextDialog() {

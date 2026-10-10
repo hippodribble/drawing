@@ -29,6 +29,8 @@ go get github.com/hippodribble/drawing/layermanager
 package main
 
 import (
+    "image/color"
+
     "fyne.io/fyne/v2/app"
     "github.com/hippodribble/drawing/layermanager"
 )
@@ -39,6 +41,10 @@ func main() {
 
     manager := layermanager.NewLayerManager()
     layer := layermanager.NewGeometryLayer()
+
+    // Geometry is not visible until the layer has a stroke width and color.
+    layer.SetStrokeWidth(2)
+    layer.SetStrokeColor(color.NRGBA{R: 0, G: 0, B: 0, A: 255})
 
     layer.Points = []layermanager.Point{
         {X: 0, Y: 0},
