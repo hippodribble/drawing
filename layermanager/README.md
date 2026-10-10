@@ -1,72 +1,99 @@
-# Drawing Package
+# LayerManager package
 
-Package _drawing_ provides:
-* a simple framework to display points (as circles) and line segments in layer widgets of type `GeometryLayer`
-* a `LayerManager` to stack `GeometryLayer` instances in a single widget
+Package `layermanager` provides a small set of Fyne widgets for drawing simple geometric data as stacked overlay layers.
 
-## Data
- 
-World data are either points or line segments, expressed as `Point` or `Line` types.
+It is designed for applications that need to display points, lines, and annotations on a shared coordinate system while supporting zooming, fitting the content to view, and layering multiple datasets together.
 
-`Point`s are very basic, with only `X` and `Y` values. This allows adapters to be written to/from user types
+## Overview
 
-`Line`s are represented by `X1`, `Y1`, `X2`, `Y2` values They are necessarily only segments between two points, as that is all Fyne supports. Polylines (open or closed) are represented by multiple `Line`s.
+The package contains three core concepts:
 
-## Geometry Layers ##
+- `Point` and `Line` hold world-space geometry
+- `GeometryLayer` renders a collection of points and line segments
+- `LayerManager` stacks multiple layers and manages a shared projection
 
-`GeometryLayer` is the basic drawable unit in the package. It is a Fyne widget that stores a set of `Point` and `Line` values together with the information needed to render them on screen.
+## Data model
 
-Each layer contains:
+World-space data are stored as basic primitives:
 
-* `Points` and `Lines`, which hold the world-space geometry for that layer
-* a `Projection`, which converts between world coordinates and screen coordinates during rendering
-* `StrokeWidth` and `StrokeColor`, which control the appearance of both points and line segments
-* an optional status channel used to report layer-related status back to the application
+- `Point` contains `X` and `Y`
+- `Line` contains `X1`, `Y1`, `X2`, and `Y2`
 
-Layers are intended to be independent overlays. A viewport or layer manager can stack multiple `GeometryLayer` instances so that each dataset, annotation set, or interactive drawing pass remains separate.
+A polyline is represented by multiple `Line` values, which keeps the model simple and compatible with Fyne's basic rendering primitives.
 
-The main operations provided by `GeometryLayer` are:
+## GeometryLayer
 
-* `NewGeometryLayer`, to construct a new empty layer for a projection
-* `SetProjection`, to update the coordinate transform and refresh the display
-* `Limits`, to calculate the layer bounds from all points and segment endpoints
-* `Clear`, to remove all stored geometry and redraw the layer empty
+`GeometryLayer` is the fundamental drawable unit. Each layer keeps:
 
-In practice, a layer is usually populated by appending `Point` or `Line` values and then letting the containing layer manager refresh and render it.
+- `Points` and `Lines`
+- a `Projection` for converting world coordinates to screen coordinates
+- `StrokeWidth` and `StrokeColor` for rendering style
+- an optional status channel for feedback
 
-## Layer Manager ##
+Layers are intended to be independent overlays that can be added, removed, cleared, or reused as needed.
 
-`LayerManager` is the widget that combines multiple `GeometryLayer` instances into a single interactive canvas. It owns the shared `Projection`, renders the layers as a stack, and handles user input such as mouse movement, button presses, and scroll-wheel zoom.
+Typical usage looks like this:
 
-Its main responsibilities are:
+```go
+layer := layermanager.NewGeometryLayer()
+layer.Points = []layermanager.Point{{X: 0, Y: 0}, {X: 10, Y: 5}}
+layer.Lines = []layermanager.Line{{X1: 0, Y1: 0, X2: 10, Y2: 5}}
+```
 
-* maintaining an ordered list of layers in `Layers`
-* applying a shared projection to every layer before refresh
-* providing layer lifecycle operations such as `AddLayer`, `RemoveLayer`, and `ClearLayers`
-* reporting cursor position through a status channel in both world and screen coordinates
-* fitting all visible geometry into view with `ShowAll`
-* supporting interactive drawing when `SetDrawMode(true)` has been enabled
+## LayerManager
 
-The layer order is significant. Layers are rendered in stack order, and the topmost layer is also the one used by the current interactive drawing logic.
+`LayerManager` combines multiple `GeometryLayer` instances into a single interactive canvas. It manages the shared projection, renders the layers in order, and provides helpers for:
 
-## Projection ##
+- adding or removing layers
+- clearing the stack
+- showing the full extent of all content
+- zooming around the mouse position
+- working in draw mode for interactive sketching
 
-`Projection` converts between world coordinates and screen coordinates. Rather than storing a fixed origin, it is defined by three values:
+```go
+manager := layermanager.NewLayerManager()
+layer.AttachTo(manager)
+manager.ShowAll()
+```
 
-* a screen-space reference point (`mouse`)
-* the world-space point that corresponds to that screen position (`world`)
-* a scale factor (`scale`)
+## Projection
 
-This is enough to perform bidirectional conversion:
+`Projection` converts between world and screen coordinates. It stores:
 
-* `ToScreen` maps a world point into widget coordinates
-* `ToWorld` maps a widget position back into world space
+- a screen-space reference point (`mouse`)
+- the corresponding world-space point (`world`)
+- a scale factor (`scale`)
 
-The package also provides a few helpers around this model:
+This is enough to support `ToScreen`, `ToWorld`, and zoom operations without losing the point under the cursor.
 
-* `NewProjection` builds a projection from explicit reference values
-* `NewUnitProjection` creates a safe default projection
-* `ZoomIn` and `ZoomOut` create derived projections that preserve the world position under the mouse while changing scale
+## Example workflow
 
-This design keeps zooming intuitive, because the point under the cursor remains stable while the scale changes.
+```go
+package main
+
+import (
+    "fyne.io/fyne/v2/app"
+    "github.com/hippodribble/drawing/layermanager"
+)
+
+func main() {
+    a := app.New()
+    w := a.NewWindow("Layered drawing")
+
+    manager := layermanager.NewLayerManager()
+    layer := layermanager.NewGeometryLayer()
+
+    layer.Points = []layermanager.Point{{X: 0, Y: 0}, {X: 10, Y: 10}}
+    layer.Lines = []layermanager.Line{{X1: 0, Y1: 0, X2: 10, Y2: 10}}
+    layer.AttachTo(manager)
+
+    manager.ShowAll()
+    w.SetContent(manager)
+    w.ShowAndRun()
+}
+```
+
+## Notes
+
+This package intentionally keeps its geometry primitives minimal. It is a good fit for simple overlays, annotation layers, plotting views, and lightweight interactive drawing tools built on Fyne.
 

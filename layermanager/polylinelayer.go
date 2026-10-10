@@ -38,12 +38,16 @@ func(pl *PolylineLayer) AddPolyline(polyline Polyline) {
 	pl.Refresh()
 }
 
+// ClearPolylines removes all polylines from the PolylineLayer. It clears the Polylines slice and also clears the Lines slice of the GeometryLayer, effectively removing all geometric representations of the polylines. After clearing, it refreshes the layer to update the rendering.
 func(pl *PolylineLayer) ClearPolylines() {
 	pl.Polylines = pl.Polylines[:0]
 	pl.Lines = pl.Lines[:0]
 	pl.Refresh()
 }
 
+// Limits calculates and returns the minimum and maximum X and Y coordinates of all polylines in the PolylineLayer.
+// It returns four float32 values: minX, minY, maxX, and maxY. If the layer has no polylines, it returns default limits of (0, 0, 1, 1). 
+// This method is useful for determining the bounding box of the polylines in the layer.
 func (pl *PolylineLayer) Limits() (minX, minY, maxX, maxY float32) {
 	if len(pl.Polylines) == 0 {
 		return 0, 0, 1, 1
@@ -67,7 +71,7 @@ func (pl *PolylineLayer) Limits() (minX, minY, maxX, maxY float32) {
 	}
 	return
 }
-
+// AttachTo attaches the PolylineLayer to a LayerManager. It adds the PolylineLayer's GeometryLayer to the LayerManager, sets the projection of the PolylineLayer to match that of the LayerManager, and refreshes the LayerManager to ensure that the new layer is properly displayed. This method allows for easy integration of the PolylineLayer into a larger layer management system.
 func (pl *PolylineLayer) AttachTo(m *LayerManager) {
 	m.AddLayer(pl.GeometryLayer)
 	pl.Projection=m.Projection()

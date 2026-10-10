@@ -29,6 +29,7 @@ func NewLine(x1, y1, x2, y2 float64) Line {
 	}
 }
 
+// Polyline represents a sequence of connected points in 2D space. It is defined by a slice of Points.
 type Polyline struct {
 	Points []Point
 }
