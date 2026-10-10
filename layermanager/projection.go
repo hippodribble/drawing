@@ -1,4 +1,4 @@
-package layermnanager
+package layermanager
 
 import (
 	"fmt"

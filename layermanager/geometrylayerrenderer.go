@@ -1,4 +1,4 @@
-package layermnanager
+package layermanager
 
 import (
 	"fyne.io/fyne/v2"

@@ -1,4 +1,4 @@
-package layermnanager
+package layermanager
 
 // PolylineLayer is a widget that represents a layer of polylines that can be drawn on a canvas. 
 // It extends the GeometryLayer to hold a collection of polylines, which are sequences of connected 
