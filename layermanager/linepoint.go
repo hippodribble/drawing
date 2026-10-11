@@ -1,5 +1,7 @@
 package layermanager
 
+import "math"
+
 // Point represents a point in 2D space with X and Y coordinates.
 type Point struct {
 	X, Y float64
@@ -29,6 +31,12 @@ func NewLine(x1, y1, x2, y2 float64) Line {
 	}
 }
 
+func (l Line) Length() float64 {
+	dx := l.X2 - l.X1
+	dy := l.Y2 - l.Y1
+	return math.Sqrt(dx*dx + dy*dy)
+}
+
 // Polyline represents a sequence of connected points in 2D space. It is defined by a slice of Points.
 type Polyline struct {
 	Points []Point
@@ -39,4 +47,17 @@ func NewPolyline(points []Point) Polyline {
 	return Polyline{
 		Points: points,
 	}
+}
+
+func(p Polyline) Length() float64 {
+	if len(p.Points) < 2 {
+		return 0
+	}
+	length := 0.0
+	for i := 1; i < len(p.Points); i++ {
+		dx := p.Points[i].X - p.Points[i-1].X
+		dy := p.Points[i].Y - p.Points[i-1].Y
+		length += math.Sqrt(dx*dx + dy*dy)
+	}
+	return length
 }

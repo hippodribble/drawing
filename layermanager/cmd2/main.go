@@ -1,9 +1,13 @@
 package main
 
 import (
+	"image/color"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	layermanager "github.com/hippodribble/drawing/layermanager"
 )
@@ -28,13 +32,26 @@ func gui() fyne.CanvasObject {
 	go monitorStatusUpdates()
 	viewport = layermanager.NewLayerManager()
 	viewport.SetStatusChannel(statusChannel)
-	centre = container.NewStack(viewport)
+	frame:=canvas.NewRectangle(color.Transparent)
+	frame.StrokeWidth=1
+	frame.CornerRadius=10
+	frame.StrokeColor=theme.Color(theme.ColorNameForeground)
+	centre = container.NewStack(frame,viewport)
 	top = container.NewHBox(
 		widget.NewButton("P1/90 Preplot", loadSailLines),
 		widget.NewButton("P1/90 Text", showP190TextDialog),
 		widget.NewButton("Clear Layers", viewport.ClearLayers),
 		widget.NewButton("Show All", viewport.ShowAll),
+		widget.NewCheck("Measure",
+			func(b bool) {
+				if b {
+					viewport.SetMode(layermanager.ModeMeasure)
+				} else {
+					viewport.SetMode(layermanager.ModeNone)
+				}
+			}),
 	)
+
 	b := container.NewBorder(
 		top,
 		bottom,

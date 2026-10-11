@@ -41,7 +41,7 @@ func NewUnitProjection() *Projection {
 
 // String returns a string representation of the Projection, including the mouse position, world position, and scale factor.
 func (proj *Projection) String() string {
-	return fmt.Sprintf("Projection: mouse=(%f,%f), world=(%f,%f), scale=%f", proj.mouse.X, proj.mouse.Y, proj.world.X, proj.world.Y, proj.scale)
+	return fmt.Sprintf("Projection: mouse=(%f,%f), world=(%f,%f), scale=%f, resolution=%f", proj.mouse.X, proj.mouse.Y, proj.world.X, proj.world.Y, proj.scale, proj.Resolution())
 }
 
 // ToScreen converts world coordinates to screen coordinates using the current projection parameters.
@@ -72,4 +72,12 @@ func (proj *Projection) ZoomIn(m fyne.Position, factor float32) *Projection {
 	w := proj.ToWorld(m)
 	scale := proj.scale / factor
 	return NewProjection(m, w, scale)
+}
+
+// Resolution returns the resolution of the projection, which is defined as the inverse of the scale factor. 
+// A higher resolution means that world coordinates are scaled down more when converting to screen coordinates, 
+// while a lower resolution means that they are scaled up more.
+func(proj *Projection)Resolution() float32 {
+	fmt.Println(1/proj.scale,"m/pixel")
+	return 1/proj.scale
 }

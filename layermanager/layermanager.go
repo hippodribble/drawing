@@ -7,8 +7,16 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
+	"golang.org/x/image/colornames"
 )
 
+type Mode int
+
+const (
+	ModeNone Mode = iota
+	ModeDraw
+	ModeMeasure
+)
 
 // LayerManager is a widget that manages multiple GeometryLayer instances, allowing for the organization and rendering of geometric shapes on a canvas. It provides functionality for adding, removing, and clearing layers, as well as managing the projection used for coordinate transformations. The LayerManager also handles mouse events for drawing and zooming, and it can communicate status updates through a channel.
 type LayerManager struct {
@@ -16,11 +24,13 @@ type LayerManager struct {
 
 	projection    *Projection
 	Layers        []*GeometryLayer
+	dragLayer     *GeometryLayer
 	stack         *fyne.Container
 	statusChannel chan string
 	margin        float32
 	startpos      fyne.Position
 	mousedown     bool
+	mode          Mode
 }
 
 // NewLayerManager creates a new LayerManager with the given projection and an optional list of GeometryLayer instances. It initializes the LayerManager with the specified projection, sets up the stack container for rendering the layers, and prepares it for interaction.
@@ -64,6 +74,9 @@ func (v *LayerManager) SetStatusChannel(ch chan string) {
 	}
 }
 
+func (v *LayerManager) SetMode(m Mode) {
+	v.mode = m
+}
 
 // RefreshLayers refreshes all GeometryLayer instances managed by the LayerManager, ensuring that they are updated with the current projection and redrawn on the canvas.
 func (v *LayerManager) RefreshLayers() {
@@ -160,10 +173,17 @@ func (v *LayerManager) ShowAll() {
 
 	proj := NewProjection(mousePos, worldPos, scale)
 	v.SetProjection(proj)
-	if v.statusChannel != nil {
-		v.statusChannel <- fmt.Sprintf("ShowAll: minX=%f, minY=%f, maxX=%f, maxY=%f, scale=%f", minX, minY, maxX, maxY, scale)
-	}
+	v.Report(fmt.Sprintf("ShowAll: minX=%f, minY=%f, maxX=%f, maxY=%f, scale=%f", minX, minY, maxX, maxY, scale))
 
+}
+
+// Report sends a status update message to the LayerManager's status channel, if it is set. 
+// This function can be used by the LayerManager or its layers to communicate important 
+// information or updates to the user interface. Yes, an AI wrote that.
+func (v *LayerManager) Report(s string) {
+	if v.statusChannel != nil {
+		v.statusChannel <- s
+	}
 }
 
 func (v *LayerManager) MouseIn(e *desktop.MouseEvent) {}
@@ -171,14 +191,21 @@ func (v *LayerManager) MouseIn(e *desktop.MouseEvent) {}
 func (v *LayerManager) MouseMoved(e *desktop.MouseEvent) {
 	p := e.Position
 	q := v.projection.ToWorld(p)
-	if v.statusChannel != nil {
-		v.statusChannel <- fmt.Sprintf("World: %9.2f, %9.2f  Screen: %9.2f, %9.2f", q.X, q.Y, p.X, p.Y)
-	}
-	if v.mousedown{
-		// we must be panning, so adjust the projection based on the mouse movement
-		proj := NewProjection(p, v.startpos, v.projection.scale)
-		v.SetProjection(proj)
-
+	v.Report(fmt.Sprintf("Position: %9.2f, %9.2f (%9.2f m/pixel)", q.X, q.Y, 1/v.projection.scale))
+	if v.mousedown {
+		switch v.mode {
+		case ModeNone:
+			// we must be panning, so adjust the projection based on the mouse movement
+			proj := NewProjection(p, v.startpos, v.projection.scale)
+			v.SetProjection(proj)
+		case ModeMeasure:
+			// we must be measuring so draw a line from the start position to the current mouse position
+			v.dragLayer.Clear()
+			line := NewLine(float64(v.startpos.X), float64(v.startpos.Y), float64(q.X), float64(q.Y))
+			v.dragLayer.Lines = append(v.dragLayer.Lines, line)
+			v.dragLayer.Refresh()
+			v.Report(fmt.Sprintf("Length: %9.2f m", line.Length()))
+		}
 	}
 }
 
@@ -204,11 +231,25 @@ func (v *LayerManager) MouseOut() {}
 func (v *LayerManager) MouseDown(e *desktop.MouseEvent) {
 	v.startpos = v.projection.ToWorld(e.Position)
 	v.mousedown = true
+	if v.mode == ModeMeasure { // create a drag layer if necessary
+		if v.dragLayer == nil {
+			v.dragLayer = NewGeometryLayer()
+			fmt.Println("Added drag layer")
+			// v.dragLayer.Projection = v.projection
+			v.dragLayer.StrokeColor = colornames.Red
+			v.dragLayer.StrokeWidth = 2.0
+			v.AddLayer(v.dragLayer)
+		}
+		v.dragLayer.Clear()
+	}
 }
 
 func (v *LayerManager) MouseUp(e *desktop.MouseEvent) {
 	v.mousedown = false
+	v.RemoveLayer(v.dragLayer)
+	v.dragLayer = nil
 	if e.Button == desktop.MouseButtonSecondary {
 		v.ShowAll()
 	}
+
 }
