@@ -45,9 +45,7 @@ func gui() fyne.CanvasObject {
 		widget.NewButton("Point+Line Layer", addDummyPointLineLayer),
 		widget.NewButton("Clear Layers", viewport.ClearLayers),
 		widget.NewButton("Show All", viewport.ShowAll),
-		widget.NewCheck("Draw", func(b bool) {
-			viewport.SetDrawMode(b)
-		}),
+
 	)
 	b := container.NewBorder(
 		top,

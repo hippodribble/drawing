@@ -21,7 +21,6 @@ type LayerManager struct {
 	margin        float32
 	startpos      fyne.Position
 	mousedown     bool
-	drawMode      bool
 }
 
 // NewLayerManager creates a new LayerManager with the given projection and an optional list of GeometryLayer instances. It initializes the LayerManager with the specified projection, sets up the stack container for rendering the layers, and prepares it for interaction.
@@ -65,10 +64,6 @@ func (v *LayerManager) SetStatusChannel(ch chan string) {
 	}
 }
 
-// SetDrawMode sets the draw mode for the LayerManager. When draw mode is enabled, the LayerManager may allow for interactive drawing on the layers.
-func (v *LayerManager) SetDrawMode(draw bool) {
-	v.drawMode = draw
-}
 
 // RefreshLayers refreshes all GeometryLayer instances managed by the LayerManager, ensuring that they are updated with the current projection and redrawn on the canvas.
 func (v *LayerManager) RefreshLayers() {
@@ -179,22 +174,10 @@ func (v *LayerManager) MouseMoved(e *desktop.MouseEvent) {
 	if v.statusChannel != nil {
 		v.statusChannel <- fmt.Sprintf("World: %9.2f, %9.2f  Screen: %9.2f, %9.2f", q.X, q.Y, p.X, p.Y)
 	}
-	if v.mousedown && v.drawMode {
-		if len(v.Layers) == 0 {
-			return
-		}
-		l := v.Layers[len(v.Layers)-1]
-		currentPos := v.projection.ToWorld(p)
-		mouseline := NewLine(float64(v.startpos.X), float64(v.startpos.Y), float64(currentPos.X), float64(currentPos.Y))
-		l.Lines = []Line{mouseline}
-		l.Refresh()
-		l.Refresh()
-	}
-	if !v.mousedown && v.drawMode {
-		if len(v.Layers) == 0 {
-			return
-		}
-		// l := v.Layers[len(v.Layers)-1]
+	if v.mousedown{
+		// we must be panning, so adjust the projection based on the mouse movement
+		proj := NewProjection(p, v.startpos, v.projection.scale)
+		v.SetProjection(proj)
 
 	}
 }
@@ -225,8 +208,7 @@ func (v *LayerManager) MouseDown(e *desktop.MouseEvent) {
 
 func (v *LayerManager) MouseUp(e *desktop.MouseEvent) {
 	v.mousedown = false
-	l := v.Layers[len(v.Layers)-1]
-	currentPos := v.projection.ToWorld(e.Position)
-	mouseline := NewLine(float64(v.startpos.X), float64(v.startpos.Y), float64(currentPos.X), float64(currentPos.Y))
-	l.Lines = append(l.Lines, mouseline)
+	if e.Button == desktop.MouseButtonSecondary {
+		v.ShowAll()
+	}
 }
