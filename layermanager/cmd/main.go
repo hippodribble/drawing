@@ -1,7 +1,6 @@
 package main
 
 import (
-	"image/color"
 	"math/rand"
 
 	"fyne.io/fyne/v2"
@@ -10,8 +9,6 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	layermanager "github.com/hippodribble/drawing/layermanager"
-
-	"golang.org/x/image/colornames"
 )
 
 var viewport *layermanager.LayerManager
@@ -45,7 +42,13 @@ func gui() fyne.CanvasObject {
 		widget.NewButton("Point+Line Layer", addDummyPointLineLayer),
 		widget.NewButton("Clear Layers", viewport.ClearLayers),
 		widget.NewButton("Show All", viewport.ShowAll),
-
+		widget.NewCheck("ID", func(checked bool) {
+			if checked {
+				viewport.SetMode(layermanager.ModeIdentify)
+			} else {
+				viewport.SetMode(layermanager.ModeNone)
+			}
+		}),
 	)
 	b := container.NewBorder(
 		top,
@@ -63,31 +66,9 @@ func monitorStatusUpdates() {
 	}
 }
 
-func randColor() color.Color {
-	colors := []color.Color{
-		colornames.Red,
-		colornames.Green,
-		colornames.Blue,
-		colornames.Orange,
-		colornames.Purple,
-		colornames.Cyan,
-		colornames.Magenta,
-		colornames.Yellow,
-	}
-	return colors[rand.Intn(len(colors))]
-}
-
-func randColor2() color.Color {
-	r := rand.Uint32() >> 24
-	g := rand.Uint32() >> 24
-	b := rand.Uint32() >> 24
-
-	return color.RGBA{uint8(r), uint8(g), uint8(b), 255}
-}
-
 func addDummyPointLayer() {
-	for range 100 {
-		layer := makeDummyPointLayer(100)
+	for range 1 {
+		layer := makeDummyPointLayer(10)
 		layer.AttachTo(viewport)
 	}
 	viewport.ShowAll()
@@ -118,8 +99,8 @@ func makeDummyPointLayer(numPoints int) *layermanager.GeometryLayer {
 		point := layermanager.NewPoint(x, y)
 		layer.Points = append(layer.Points, point)
 	}
-	layer.StrokeWidth = 2
-	layer.StrokeColor = randColor2()
+	layer.StrokeWidth = 10
+	layer.StrokeColor = layermanager.RandomChoiceColor()
 	return layer
 }
 
@@ -134,7 +115,7 @@ func makeDummyLineLayer(numLines int) *layermanager.GeometryLayer {
 		layer.Lines = append(layer.Lines, line)
 	}
 	layer.StrokeWidth = 1
-	layer.StrokeColor = randColor()
+	layer.StrokeColor = layermanager.RandomChoiceColor()
 	return layer
 }
 
@@ -159,7 +140,7 @@ func makeDummyPointLineLayer(numPointsLines int) *layermanager.GeometryLayer {
 		point := layermanager.NewPoint(x, y)
 		layer.Points = append(layer.Points, point)
 	}
-	layer.StrokeWidth = 1
-	layer.StrokeColor = randColor()
+	layer.StrokeWidth = 5
+	layer.StrokeColor = layermanager.RandomChoiceColor()
 	return layer
 }

@@ -80,7 +80,7 @@ func loadP190FromFile(reader fyne.URIReadCloser) {
 		return
 	}
 
-	polylineLayer := layermanager.NewPolylineLayer()
+	polylineLayer := layermanager.NewGeometryLayer()
 
 	thepolylines := []layermanager.Polyline{}
 	for _, line := range p190File.Lines {
@@ -88,11 +88,10 @@ func loadP190FromFile(reader fyne.URIReadCloser) {
 		for _, r := range *line.Records {
 			thepoints = append(thepoints, layermanager.Point{X: r.Easting, Y: r.Northing})
 		}
-		polyline := layermanager.Polyline{Points: thepoints}
+		polyline := layermanager.Polyline{Points: thepoints,ID: line.Name}
 		thepolylines = append(thepolylines, polyline)
 		polylineLayer.AddPolyline(polyline)
 	}
-	polylineLayer.Polylines = thepolylines
 	viewport.ClearLayers()
 	polylineLayer.AttachTo(viewport)
 	status.SetText(fmt.Sprintf("Loaded %d polylines from %s", len(thepolylines), filename))

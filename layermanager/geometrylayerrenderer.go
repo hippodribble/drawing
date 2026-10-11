@@ -28,13 +28,22 @@ func (r *GeometryLayerRenderer) Layout(size fyne.Size) {
 		p2 := r.layer.Projection.ToScreen(fyne.NewPos(float32(line.X2), float32(line.Y2)))
 		r.lines[i].Position1 = fyne.NewPos(p1.X, p1.Y)
 		r.lines[i].Position2 = fyne.NewPos(p2.X, p2.Y)
+		r.lines[i].StrokeWidth = r.layer.StrokeWidth
+		if r.layer.highlightNearest && r.layer.highlightLineStart >= 0 && r.layer.highlightLineEnd >= r.layer.highlightLineStart && i >= r.layer.highlightLineStart && i <= r.layer.highlightLineEnd {
+			r.lines[i].StrokeWidth = 2 * r.layer.StrokeWidth
+		}
 	}
 
 	for i, point := range r.layer.Points {
 		p := r.layer.Projection.ToScreen(fyne.NewPos(float32(point.X), float32(point.Y)))
 		r.points[i].Move(fyne.NewPos(p.X-r.layer.StrokeWidth/2, p.Y-r.layer.StrokeWidth/2))
 		r.points[i].Resize(fyne.NewSize(r.layer.StrokeWidth, r.layer.StrokeWidth))
+		if r.layer.highlightNearest && r.layer.nearestPoint >= 0 && r.layer.nearestPoint < len(r.points) && i == r.layer.nearestPoint {
+			r.points[i].Move(fyne.NewPos(p.X-r.layer.StrokeWidth, p.Y-r.layer.StrokeWidth))
+			r.points[i].Resize(fyne.NewSize(2*r.layer.StrokeWidth, 2*r.layer.StrokeWidth))
+		}
 	}
+
 }
 
 func (r *GeometryLayerRenderer) MinSize() fyne.Size {
@@ -91,7 +100,11 @@ func (r *GeometryLayerRenderer) Sync() {
 		point.FillColor = r.layer.StrokeColor
 		point.StrokeWidth = r.layer.StrokeWidth / 2
 		point.StrokeColor = r.layer.StrokeColor
-		point.FillColor = r.layer.fillColor
+
+		// if r.layer.highlightNearest && r.layer.nearestPoint >= 0 && r.layer.nearestPoint < len(r.points) && i == r.layer.nearestPoint {
+		// 	point.StrokeColor = colornames.Red
+		// }
+
 	}
 
 	if changed {
@@ -114,6 +127,8 @@ func (r *GeometryLayerRenderer) Sync() {
 
 // Sync2 is dumb. It creates all lines and circles and object
 // references every time, and does not reuse them.
+//
+// Deprecated: Use Sync instead. This method is inefficient and should be avoided in favor of the more efficient Sync method.
 func (r *GeometryLayerRenderer) Sync2() {
 
 	nLines := len(r.layer.Lines)

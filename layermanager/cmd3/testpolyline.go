@@ -20,8 +20,8 @@ func main() {
 }
 
 func gui() fyne.CanvasObject {
-	// Create a new polyline layer
-	polylineLayer := &layermanager.PolylineLayer{}
+	// Create a new geometry layer with polyline support
+	polylineLayer := layermanager.NewGeometryLayer()
 
 	// Add a sample polyline
 	polyline := layermanager.Polyline{
@@ -41,7 +41,6 @@ func gui() fyne.CanvasObject {
 		polylineLayer.AttachTo(layermanager)
 		layermanager.RefreshLayers()
 		layermanager.ShowAll()
-
 	})
 
 	// Return the polyline layer as the content of the window

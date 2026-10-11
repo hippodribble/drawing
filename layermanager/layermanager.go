@@ -16,6 +16,7 @@ const (
 	ModeNone Mode = iota
 	ModeDraw
 	ModeMeasure
+	ModeIdentify
 )
 
 // LayerManager is a widget that manages multiple GeometryLayer instances, allowing for the organization and rendering of geometric shapes on a canvas. It provides functionality for adding, removing, and clearing layers, as well as managing the projection used for coordinate transformations. The LayerManager also handles mouse events for drawing and zooming, and it can communicate status updates through a channel.
@@ -26,6 +27,7 @@ type LayerManager struct {
 	Layers        []*GeometryLayer
 	dragLayer     *GeometryLayer
 	stack         *fyne.Container
+	highlight     bool
 	statusChannel chan string
 	margin        float32
 	startpos      fyne.Position
@@ -55,6 +57,13 @@ func (v *LayerManager) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(v.stack)
 }
 
+func (v *LayerManager) SetHighlight(highlight bool) {
+	v.highlight = highlight
+	for _, layer := range v.Layers {
+		layer.SetHighlightNearest(highlight)
+	}
+}
+
 // SetProjection sets the projection for the LayerManager and refreshes all layers to reflect the new projection. The projection is used to convert between world and screen coordinates when rendering the geometric shapes in the layers.
 func (v *LayerManager) SetProjection(proj *Projection) {
 	v.projection = proj
@@ -76,6 +85,12 @@ func (v *LayerManager) SetStatusChannel(ch chan string) {
 
 func (v *LayerManager) SetMode(m Mode) {
 	v.mode = m
+	if m == ModeIdentify {
+		v.highlight = true
+		for _, layer := range v.Layers {
+			layer.SetHighlightNearest(v.highlight)
+		}
+	}
 }
 
 // RefreshLayers refreshes all GeometryLayer instances managed by the LayerManager, ensuring that they are updated with the current projection and redrawn on the canvas.
@@ -177,8 +192,8 @@ func (v *LayerManager) ShowAll() {
 
 }
 
-// Report sends a status update message to the LayerManager's status channel, if it is set. 
-// This function can be used by the LayerManager or its layers to communicate important 
+// Report sends a status update message to the LayerManager's status channel, if it is set.
+// This function can be used by the LayerManager or its layers to communicate important
 // information or updates to the user interface. Yes, an AI wrote that.
 func (v *LayerManager) Report(s string) {
 	if v.statusChannel != nil {
@@ -205,6 +220,15 @@ func (v *LayerManager) MouseMoved(e *desktop.MouseEvent) {
 			v.dragLayer.Lines = append(v.dragLayer.Lines, line)
 			v.dragLayer.Refresh()
 			v.Report(fmt.Sprintf("Length: %9.2f m", line.Length()))
+		}
+	}
+	if v.mode == ModeIdentify {
+		for _, layer := range v.Layers {
+			layer.HighlightNearestPoint(q)
+			i, _ := layer.HighlightNearestPolylineAt(q)
+			if i >= 0 {
+				v.Report(layer.Polylines[i].ID)
+			}
 		}
 	}
 }
@@ -234,8 +258,6 @@ func (v *LayerManager) MouseDown(e *desktop.MouseEvent) {
 	if v.mode == ModeMeasure { // create a drag layer if necessary
 		if v.dragLayer == nil {
 			v.dragLayer = NewGeometryLayer()
-			fmt.Println("Added drag layer")
-			// v.dragLayer.Projection = v.projection
 			v.dragLayer.StrokeColor = colornames.Red
 			v.dragLayer.StrokeWidth = 2.0
 			v.AddLayer(v.dragLayer)

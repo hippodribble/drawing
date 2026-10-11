@@ -32,24 +32,30 @@ func gui() fyne.CanvasObject {
 	go monitorStatusUpdates()
 	viewport = layermanager.NewLayerManager()
 	viewport.SetStatusChannel(statusChannel)
-	frame:=canvas.NewRectangle(color.Transparent)
-	frame.StrokeWidth=1
-	frame.CornerRadius=10
-	frame.StrokeColor=theme.Color(theme.ColorNameForeground)
-	centre = container.NewStack(frame,viewport)
+	frame := canvas.NewRectangle(color.Transparent)
+	frame.StrokeWidth = 1
+	frame.CornerRadius = 10
+	frame.StrokeColor = theme.Color(theme.ColorNameForeground)
+	centre = container.NewStack(frame, viewport)
 	top = container.NewHBox(
 		widget.NewButton("P1/90 Preplot", loadSailLines),
 		widget.NewButton("P1/90 Text", showP190TextDialog),
 		widget.NewButton("Clear Layers", viewport.ClearLayers),
 		widget.NewButton("Show All", viewport.ShowAll),
-		widget.NewCheck("Measure",
-			func(b bool) {
-				if b {
-					viewport.SetMode(layermanager.ModeMeasure)
-				} else {
-					viewport.SetMode(layermanager.ModeNone)
-				}
-			}),
+		widget.NewCheck("Measure", func(b bool) {
+			if b {
+				viewport.SetMode(layermanager.ModeMeasure)
+			} else {
+				viewport.SetMode(layermanager.ModeNone)
+			}
+		}),
+		widget.NewCheck("ID", func(checked bool) {
+			if checked {
+				viewport.SetMode(layermanager.ModeIdentify)
+			} else {
+				viewport.SetMode(layermanager.ModeNone)
+			}
+		}),
 	)
 
 	b := container.NewBorder(

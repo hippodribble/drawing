@@ -1,0 +1,20 @@
+package layermanager
+
+// PolylineLayer is a thin compatibility wrapper around GeometryLayer.
+//
+// Deprecated: Use GeometryLayer directly. Polyline support is now built into
+// GeometryLayer (AddPolyline, ClearPolylines, NearestPolyline, and related
+// helpers).
+type PolylineLayer struct {
+	*GeometryLayer
+}
+
+func NewPolylineLayer() *PolylineLayer {
+	return &PolylineLayer{GeometryLayer: NewGeometryLayer()}
+}
+
+func (pl *PolylineLayer) AttachTo(m *LayerManager) {
+	m.AddLayer(pl.GeometryLayer)
+	pl.Projection = m.Projection()
+	m.Refresh()
+}
