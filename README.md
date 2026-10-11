@@ -6,10 +6,10 @@ The project provides a lightweight canvas toolkit for visualising point and line
 
 ## Features
 
-- `GeometryLayer` for simple point and line data
+- `GeometryLayer` for simple point line and polyline data
 - `LayerManager` for stacking multiple layers in one widget
 - shared `Projection` for world/screen coordinate transforms
-- mouse wheel zoom and fit-to-view helpers
+- mouse wheel zoom and pan and fit-to-view helpers
 - status reporting via channels for drawing and interaction updates
 
 ## Package layout
