@@ -75,6 +75,7 @@ layer.AddPolyline(polyline)
 - clearing the stack
 - showing the full extent of all content
 - zooming around the mouse position
+- panning the drawing using left mouse button
 - working in draw mode for interactive sketching
 
 ```go
