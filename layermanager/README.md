@@ -6,7 +6,7 @@ It is designed for applications that need to display points, lines, and annotati
 
 ## Overview
 
-The package contains three core concepts:
+The package uses these core concepts:
 
 - `Point`, `Line`, `Polyline` and `Polygon` hold world-space geometry
 - `GeometryLayer` renders a collection of points and line segments, and deconstructs `Polyline` and `Polygon` types to their component `Line` segments
@@ -19,9 +19,42 @@ World-space data are stored as basic primitives:
 
 - `Point` contains `X` and `Y`
 - `Line` contains `X1`, `Y1`, `X2`, and `Y2`
-- `Polyline` is represented by multiple `Line` values, which keeps the model simple and compatible with Fyne's basic rendering primitives.
+- `Polyline` contains an ordered list of `Point` values
+- `Polygon` contains a ordered, closed list of `Point` values
 
-These shape types also provide convenience functions for geometric operations such as `Translate`, `Rotate`, `Offset`, `BufferBy`, `Area`, `Perimeter`, and `Length`.
+Exported geometry functions in `geometry.go`:
+
+- `Point`
+    - `NewPoint(x1, y1 float64) Point`
+    - `(Point) Translate(dx, dy float64) Point`
+    - `(Point) Rotate(angle float64, centre Point) Point`
+    - `(Point) SquareDistance(other Point) float64`
+- `Line`
+    - `NewLine(x1, y1, x2, y2 float64) Line`
+    - `(Line) Translate(dx, dy float64) Line`
+    - `(Line) Rotate(angle float64, centre Point) Line`
+    - `(Line) Length() float64`
+    - `(Line) DistanceTo(p Point) float64`
+- `Polyline`
+    - `NewPolyline(points []Point) Polyline`
+    - `(Polyline) Translate(dx, dy float64) Polyline`
+    - `(Polyline) Rotate(angle float64, centre Point) Polyline`
+    - `(Polyline) Length() float64`
+    - `(Polyline) DouglasPuecker(accuracy float64) Polyline`
+    - `(Polyline) Close() Polygon`
+    - `(Polyline) Offset(offset float64) Polyline`
+- `Polygon`
+    - `NewPolygon(points []Point) Polygon`
+    - `(Polygon) Close() Polygon`
+    - `(Polygon) Translate(dx, dy float64) Polygon`
+    - `(Polygon) Rotate(angle float64, centre Point) Polygon`
+    - `(Polygon) Area() float64`
+    - `(Polygon) Perimeter() float64`
+    - `(Polygon) Centroid() Point`
+    - `(Polygon) IsClockwise() bool`
+    - `(Polygon) Reverse() Polygon`
+    - `(Polygon) BufferBy(r float64) Polygon`
+    - `(Polygon) DouglasPeucker(tolerance float64) Polygon`
 
 ## GeometryLayer
 
@@ -52,17 +85,26 @@ layer.Lines = []layermanager.Line{{X1: 0, Y1: 0, X2: 10, Y2: 5}}
 
 `LayerManager` combines multiple `GeometryLayer` instances into a single interactive canvas. It manages the shared projection, renders the layers in order, and provides helpers for:
 
-- adding or removing layers
+- adding or removing layers to a stack (last layer displays on top of earlier layers)
 - clearing the stack
 - showing the full extent of all content
-- zooming around the mouse position
+- zooming around the mouse position (a.k.a. mouse-centred zoom)
 - panning the drawing using left mouse button
+
+Interaction modes can be changed with `SetMode(...)`:
+
+- `ModeNone`: default navigation mode. Drag with left mouse button to pan, scroll to zoom, and right-click to run `ShowAll()`.
+- `ModeDraw`: reserved mode for drawing workflows. It is currently defined but has no custom handling in mouse event logic.
+- `ModeMeasure`: drag with left mouse button to draw a temporary measurement line and report its length.
+- `ModeIdentify`: enables nearest-geometry highlighting and reports IDs of nearby polylines while moving the mouse.
 
 ```go
 manager := layermanager.NewLayerManager()
 layer.AttachTo(manager)
 manager.ShowAll()
 ```
+
+
 
 ## Projection
 
