@@ -88,8 +88,7 @@ func addPolygon(manager *layermanager.LayerManager) {
 	layer.AddPolygon(polygon)
 	layer.AttachTo(manager)
 
-
-	dp:=polygon.DouglasPeucker(10)
+	dp := polygon.DouglasPeucker(10)
 	layer5 := layermanager.NewGeometryLayer()
 	layer5.SetStrokeColor(colornames.Purple)
 	layer5.SetStrokeWidth(2)
@@ -120,7 +119,7 @@ func addPolyline(manager *layermanager.LayerManager) {
 
 	x := 100.0
 
-	polyline2 := polyline.DouglasPeucker(x * 6)
+	polyline2 := polyline.DouglasPuecker(x * 6)
 	layer2 := layermanager.NewGeometryLayer()
 	layer2.SetStrokeColor(colornames.Black)
 	layer2.SetStrokeWidth(2)

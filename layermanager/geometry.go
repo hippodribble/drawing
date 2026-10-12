@@ -110,6 +110,7 @@ func (l Line) DistanceTo(p Point) float64 {
 	return math.Sqrt(dx*dx + dy*dy)
 }
 
+// Polygon represents a closed shape defined by a sequence of connected points in 2D space. It is defined by a slice of Points.
 type Polygon struct {
 	ID     string
 	Points []Point
@@ -151,6 +152,7 @@ func (p Polyline) Rotate(angle float64, centre Point) Polyline {
 	return rotated
 }
 
+// Length calculates the total length of the polyline by summing the lengths of its constituent line segments.
 func (p Polyline) Length() float64 {
 	if len(p.Points) < 2 {
 		return 0
@@ -164,9 +166,9 @@ func (p Polyline) Length() float64 {
 	return length
 }
 
-// DouglasPeucker returns a simplified approximation of the polyline using
+// DouglasPuecker returns a simplified approximation of the polyline using
 // the Douglas-Peucker algorithm and the supplied accuracy as a tolerance.
-func (p Polyline) DouglasPeucker(accuracy float64) Polyline {
+func (p Polyline) DouglasPuecker(accuracy float64) Polyline {
 	if len(p.Points) < 3 || accuracy <= 0 {
 		points := make([]Point, len(p.Points))
 		copy(points, p.Points)
@@ -186,7 +188,7 @@ func (p Polyline) DouglasPeucker(accuracy float64) Polyline {
 		}
 	}
 
-	simplified := douglasPeuckerPoints(points, accuracy)
+	simplified := douglasPueckerPoints(points, accuracy)
 	if closed {
 		simplified = append(simplified, simplified[0])
 	}
@@ -194,7 +196,8 @@ func (p Polyline) DouglasPeucker(accuracy float64) Polyline {
 	return Polyline{ID: p.ID, Points: simplified}
 }
 
-func douglasPeuckerPoints(points []Point, tolerance float64) []Point {
+// Douglas-Puecker recursion
+func douglasPueckerPoints(points []Point, tolerance float64) []Point {
 	if len(points) <= 2 {
 		out := make([]Point, len(points))
 		copy(out, points)
@@ -218,8 +221,8 @@ func douglasPeuckerPoints(points []Point, tolerance float64) []Point {
 		return []Point{start, end}
 	}
 
-	left := douglasPeuckerPoints(points[:maxIndex+1], tolerance)
-	right := douglasPeuckerPoints(points[maxIndex:], tolerance)
+	left := douglasPueckerPoints(points[:maxIndex+1], tolerance)
+	right := douglasPueckerPoints(points[maxIndex:], tolerance)
 
 	out := make([]Point, 0, len(left)+len(right)-1)
 	out = append(out, left[:len(left)-1]...)
@@ -227,6 +230,8 @@ func douglasPeuckerPoints(points []Point, tolerance float64) []Point {
 	return out
 }
 
+// pointToSegmentDistance calculates the shortest distance from a point to a line segment defined by two endpoints (start and end).
+// It uses vector projection to find the closest point on the segment and then computes the distance to that point.
 func pointToSegmentDistance(point, start, end Point) float64 {
 	segmentLengthSquared := start.SquareDistance(end)
 	if segmentLengthSquared == 0 {
@@ -331,6 +336,7 @@ func (p Polyline) Offset(offset float64) Polyline {
 	}
 }
 
+// BufferBy creates a new Polygon that is offset from the original Polygon by a specified distance.
 func (q Polygon) offset(offset float64) Polygon {
 	if len(q.Points) < 2 {
 		return q
@@ -472,11 +478,11 @@ func (p Polygon) BufferBy(r float64) Polygon {
 
 // DouglasPeucker returns a simplified approximation of the polygon using
 // the Douglas-Peucker algorithm and the supplied accuracy as a tolerance.
-// Internally, it ccloses the polygon if necessary, converts it to a polyline, 
-// applies the Douglas-Peucker algorithm, and then closes the resulting polyline 
+// Internally, it ccloses the polygon if necessary, converts it to a polyline,
+// applies the Douglas-Peucker algorithm, and then closes the resulting polyline
 // to form a polygon.
 func (p Polygon) DouglasPeucker(tolerance float64) Polygon {
-	points:=p.Close().Points
-	polyline:=Polyline{Points: points, ID: p.ID}
-	return polyline.DouglasPeucker(tolerance).Close()
+	points := p.Close().Points
+	polyline := Polyline{Points: points, ID: p.ID}
+	return polyline.DouglasPuecker(tolerance).Close()
 }
