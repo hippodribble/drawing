@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"math"
+	"math/rand/v2"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -35,8 +35,10 @@ func gui() fyne.CanvasObject {
 	manager = layermanager.NewLayerManager()
 	manager.SetStatusChannel(statuschannel)
 	top := container.NewHBox(
+		widget.NewButton("Polygon", func() {
+			addPolygon(manager)
+		}),
 		widget.NewButton("Polyline", func() {
-			fmt.Println(manager.Limits())
 			addPolyline(manager)
 		}),
 	)
@@ -57,7 +59,10 @@ func status() {
 		fyne.Do(func() { statuslabel.SetText(update) })
 	}
 }
-func addPolyline(manager *layermanager.LayerManager) {
+func addPolygon(manager *layermanager.LayerManager) {
+
+	manager.ClearLayers()
+
 	layer := layermanager.NewGeometryLayer()
 	layer.SetStrokeColor(colornames.Red)
 	layer.SetStrokeWidth(3)
@@ -68,40 +73,59 @@ func addPolyline(manager *layermanager.LayerManager) {
 		cy     = 300.0
 	)
 
-	N:=100
+	N := 51
 	points := make([]layermanager.Point, 0, N)
 	for i := 0; i < N; i++ {
 		a := float64(i) * 2 * math.Pi / float64(N)
+		r := radius + rand.NormFloat64()*2
 		points = append(points, layermanager.Point{
-			X: cx + radius*math.Cos(a),
-			Y: cy + radius*math.Sin(a),
+			X: cx + r*math.Cos(a),
+			Y: cy + r*math.Sin(a),
 		})
 	}
 	polygon := layermanager.Polyline{Points: points, ID: "Test Polyline"}.Close()
-	polygon=polygon.Reverse()
+	polygon = polygon.Reverse()
 	layer.AddPolygon(polygon)
 	layer.AttachTo(manager)
 
-	expanded := polygon.BufferBy(20)
-	shrunken := polygon.BufferBy(-20)
-	layer2 := layermanager.NewGeometryLayer()
-	layer2.SetStrokeColor(colornames.Blue)
-	layer2.SetStrokeWidth(1)
-	layer2.AddPolygon(shrunken)
-	layer2.AttachTo(manager)
 
-	layer3 := layermanager.NewGeometryLayer()
-	layer3.SetStrokeColor(colornames.Green)
-	layer3.SetStrokeWidth(1)
-	layer3.AddPolygon(expanded)
-	layer3.AttachTo(manager)
-
-	rotated:=polygon.Rotate(.1,polygon.Centroid().Translate(50,50))
-	layer4 := layermanager.NewGeometryLayer()
-	layer4.SetStrokeColor(colornames.Orange)
-	layer4.SetStrokeWidth(4)
-	layer4.AddPolygon(rotated)
-	layer4.AttachTo(manager)
+	dp:=polygon.DouglasPeucker(10)
+	layer5 := layermanager.NewGeometryLayer()
+	layer5.SetStrokeColor(colornames.Purple)
+	layer5.SetStrokeWidth(2)
+	layer5.AddPolygon(dp)
+	layer5.AttachTo(manager)
 
 	manager.ShowAll()
+}
+
+func addPolyline(manager *layermanager.LayerManager) {
+
+	manager.ClearLayers()
+
+	points := []layermanager.Point{}
+	for i := range 1000 {
+		points = append(points, layermanager.Point{
+			X: float64(i) * 10,
+			Y: float64(i)*5 + rand.NormFloat64()*100,
+		})
+	}
+
+	polyline := layermanager.Polyline{Points: points, ID: "Test Polyline"}
+	layer := layermanager.NewGeometryLayer()
+	layer.SetStrokeColor(colornames.Red)
+	layer.SetStrokeWidth(1)
+	layer.AddPolyline(polyline)
+	layer.AttachTo(manager)
+
+	x := 100.0
+
+	polyline2 := polyline.DouglasPeucker(x * 6)
+	layer2 := layermanager.NewGeometryLayer()
+	layer2.SetStrokeColor(colornames.Black)
+	layer2.SetStrokeWidth(2)
+	layer2.AddPolyline(polyline2)
+	layer2.AttachTo(manager)
+	manager.ShowAll()
+
 }

@@ -164,6 +164,85 @@ func (p Polyline) Length() float64 {
 	return length
 }
 
+// DouglasPeucker returns a simplified approximation of the polyline using
+// the Douglas-Peucker algorithm and the supplied accuracy as a tolerance.
+func (p Polyline) DouglasPeucker(accuracy float64) Polyline {
+	if len(p.Points) < 3 || accuracy <= 0 {
+		points := make([]Point, len(p.Points))
+		copy(points, p.Points)
+		return Polyline{ID: p.ID, Points: points}
+	}
+
+	points := make([]Point, len(p.Points))
+	copy(points, p.Points)
+
+	closed := points[0].SquareDistance(points[len(points)-1]) <= .001
+	if closed {
+		points = points[:len(points)-1]
+		if len(points) < 3 {
+			out := make([]Point, len(p.Points))
+			copy(out, p.Points)
+			return Polyline{ID: p.ID, Points: out}
+		}
+	}
+
+	simplified := douglasPeuckerPoints(points, accuracy)
+	if closed {
+		simplified = append(simplified, simplified[0])
+	}
+
+	return Polyline{ID: p.ID, Points: simplified}
+}
+
+func douglasPeuckerPoints(points []Point, tolerance float64) []Point {
+	if len(points) <= 2 {
+		out := make([]Point, len(points))
+		copy(out, points)
+		return out
+	}
+
+	start := points[0]
+	end := points[len(points)-1]
+	maxDistance := -1.0
+	maxIndex := 0
+
+	for i := 1; i < len(points)-1; i++ {
+		distance := pointToSegmentDistance(points[i], start, end)
+		if distance > maxDistance {
+			maxDistance = distance
+			maxIndex = i
+		}
+	}
+
+	if maxDistance <= tolerance {
+		return []Point{start, end}
+	}
+
+	left := douglasPeuckerPoints(points[:maxIndex+1], tolerance)
+	right := douglasPeuckerPoints(points[maxIndex:], tolerance)
+
+	out := make([]Point, 0, len(left)+len(right)-1)
+	out = append(out, left[:len(left)-1]...)
+	out = append(out, right...)
+	return out
+}
+
+func pointToSegmentDistance(point, start, end Point) float64 {
+	segmentLengthSquared := start.SquareDistance(end)
+	if segmentLengthSquared == 0 {
+		return math.Sqrt(point.SquareDistance(start))
+	}
+
+	t := ((point.X-start.X)*(end.X-start.X) + (point.Y-start.Y)*(end.Y-start.Y)) / segmentLengthSquared
+	t = math.Max(0, math.Min(1, t))
+
+	projection := Point{
+		X: start.X + t*(end.X-start.X),
+		Y: start.Y + t*(end.Y-start.Y),
+	}
+	return math.Sqrt(point.SquareDistance(projection))
+}
+
 // Close checks if the first and last points of the Polyline are the same. If they are not,
 // it appends the first point to the end of the Points slice, effectively closing the Polyline.
 // It returns the modified Polyline.
@@ -389,4 +468,15 @@ func (p Polygon) BufferBy(r float64) Polygon {
 		p.Reverse()
 	}
 	return p.offset(-r)
+}
+
+// DouglasPeucker returns a simplified approximation of the polygon using
+// the Douglas-Peucker algorithm and the supplied accuracy as a tolerance.
+// Internally, it ccloses the polygon if necessary, converts it to a polyline, 
+// applies the Douglas-Peucker algorithm, and then closes the resulting polyline 
+// to form a polygon.
+func (p Polygon) DouglasPeucker(tolerance float64) Polygon {
+	points:=p.Close().Points
+	polyline:=Polyline{Points: points, ID: p.ID}
+	return polyline.DouglasPeucker(tolerance).Close()
 }
