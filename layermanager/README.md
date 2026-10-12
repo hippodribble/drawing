@@ -8,9 +8,10 @@ It is designed for applications that need to display points, lines, and annotati
 
 The package contains three core concepts:
 
-- `Point` and `Line` hold world-space geometry
-- `GeometryLayer` renders a collection of points and line segments
+- `Point`, `Line`, `Polyline` and `Polygon` hold world-space geometry
+- `GeometryLayer` renders a collection of points and line segments, and deconstructs `Polyline` and `Polygon` types to their component `Line` segments
 - `LayerManager` stacks multiple layers and manages a shared projection
+- shape convenience functions are available on `Point`, `Line`, `Polyline`, and `Polygon`
 
 ## Data model
 
@@ -19,6 +20,8 @@ World-space data are stored as basic primitives:
 - `Point` contains `X` and `Y`
 - `Line` contains `X1`, `Y1`, `X2`, and `Y2`
 - `Polyline` is represented by multiple `Line` values, which keeps the model simple and compatible with Fyne's basic rendering primitives.
+
+These shape types also provide convenience functions for geometric operations such as `Translate`, `Rotate`, `Offset`, `BufferBy`, `Area`, `Perimeter`, and `Length`.
 
 ## GeometryLayer
 
@@ -101,4 +104,6 @@ func main() {
 ## Notes
 
 This package intentionally keeps its geometry primitives minimal. It is a good fit for simple overlays, annotation layers, plotting views, and lightweight interactive drawing tools built on Fyne.
+
+The shape functions are meant to keep common geometric work directly on the model objects, so you can translate, rotate, offset, and measure `Point`, `Line`, `Polyline`, and `Polygon` values without extra helper code.
 

@@ -11,6 +11,7 @@ The project provides a lightweight canvas toolkit for visualising point and line
 - shared `Projection` for world/screen coordinate transforms
 - mouse wheel zoom and pan and fit-to-view helpers
 - status reporting via channels for drawing and interaction updates
+- convenience shape functions for `Point`, `Line`, `Polyline`, and `Polygon` such as translation, rotation, buffering, area, perimeter, and offset operations
 
 ## Package layout
 
@@ -64,3 +65,5 @@ func main() {
 ## Notes
 
 This project is intentionally simple: geometry is stored as basic point and segment primitives, and the rendering stack focuses on clarity and composability instead of a full CAD-style model.
+
+The core shape types (`Point`, `Line`, `Polyline`, and `Polygon`) also expose convenience geometric functions for common operations such as translation, rotation, offsetting, buffering, area calculation, and perimeter measurement.
