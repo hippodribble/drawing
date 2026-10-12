@@ -1,6 +1,8 @@
 package layermanager
 
-import "math"
+import (
+	"math"
+)
 
 // Point represents a point in 2D space with X and Y coordinates.
 type Point struct {
@@ -12,6 +14,25 @@ func NewPoint(x1, y1 float64) Point {
 	return Point{
 		X: x1,
 		Y: y1,
+	}
+}
+
+// Translate moves the point by the supplied dx and dy offset.
+func (p Point) Translate(dx, dy float64) Point {
+	p.X += dx
+	p.Y += dy
+	return p
+}
+
+// Rotate moves the point around the supplied centre by the given angle in radians.
+func (p Point) Rotate(angle float64, centre Point) Point {
+	dx := p.X - centre.X
+	dy := p.Y - centre.Y
+	cosTheta := math.Cos(angle)
+	sinTheta := math.Sin(angle)
+	return Point{
+		X: centre.X + dx*cosTheta - dy*sinTheta,
+		Y: centre.Y + dx*sinTheta + dy*cosTheta,
 	}
 }
 
@@ -35,6 +56,27 @@ func NewLine(x1, y1, x2, y2 float64) Line {
 		Y1: y1,
 		X2: x2,
 		Y2: y2,
+	}
+}
+
+// Translate moves both endpoints of the line by the supplied dx and dy offset.
+func (l Line) Translate(dx, dy float64) Line {
+	l.X1 += dx
+	l.Y1 += dy
+	l.X2 += dx
+	l.Y2 += dy
+	return l
+}
+
+// Rotate moves both endpoints of the line around the supplied centre by the given angle in radians.
+func (l Line) Rotate(angle float64, centre Point) Line {
+	p1 := Point{X: l.X1, Y: l.Y1}.Rotate(angle, centre)
+	p2 := Point{X: l.X2, Y: l.Y2}.Rotate(angle, centre)
+	return Line{
+		X1: p1.X,
+		Y1: p1.Y,
+		X2: p2.X,
+		Y2: p2.Y,
 	}
 }
 
@@ -68,9 +110,19 @@ func (l Line) DistanceTo(p Point) float64 {
 	return math.Sqrt(dx*dx + dy*dy)
 }
 
+type Polygon struct {
+	ID     string
+	Points []Point
+}
+
+// NewPolygon creates a new Polygon with the given slice of Points.
+func NewPolygon(points []Point) Polygon {
+	return NewPolyline(points).Close()
+}
+
 // Polyline represents a sequence of connected points in 2D space. It is defined by a slice of Points.
 type Polyline struct {
-	ID string
+	ID     string
 	Points []Point
 }
 
@@ -79,6 +131,24 @@ func NewPolyline(points []Point) Polyline {
 	return Polyline{
 		Points: points,
 	}
+}
+
+// Translate moves each point in the polyline by the supplied dx and dy offset.
+func (p Polyline) Translate(dx, dy float64) Polyline {
+	translated := Polyline{ID: p.ID, Points: make([]Point, len(p.Points))}
+	for i, point := range p.Points {
+		translated.Points[i] = point.Translate(dx, dy)
+	}
+	return translated
+}
+
+// Rotate moves each point in the polyline around the supplied centre by the given angle in radians.
+func (p Polyline) Rotate(angle float64, centre Point) Polyline {
+	rotated := Polyline{ID: p.ID, Points: make([]Point, len(p.Points))}
+	for i, point := range p.Points {
+		rotated.Points[i] = point.Rotate(angle, centre)
+	}
+	return rotated
 }
 
 func (p Polyline) Length() float64 {
@@ -92,4 +162,231 @@ func (p Polyline) Length() float64 {
 		length += math.Sqrt(dx*dx + dy*dy)
 	}
 	return length
+}
+
+// Close checks if the first and last points of the Polyline are the same. If they are not,
+// it appends the first point to the end of the Points slice, effectively closing the Polyline.
+// It returns the modified Polyline.
+func (p Polyline) Close() Polygon {
+	if len(p.Points) < 2 {
+		return Polygon{ID: p.ID, Points: p.Points}
+	}
+	if p.Points[0].SquareDistance(p.Points[len(p.Points)-1]) > .001 {
+		p.Points = append(p.Points, p.Points[0])
+	}
+	return Polygon{ID: p.ID, Points: p.Points}
+}
+
+// Close checks if the first and last points of the Polyline are the same. If they are not,
+// it appends the first point to the end of the Points slice, effectively closing the Polygon.
+// It returns the modified Polygon.
+func (p Polygon) Close() Polygon {
+	if len(p.Points) < 2 {
+		return Polygon{ID: p.ID, Points: p.Points}
+	}
+	if p.Points[0].SquareDistance(p.Points[len(p.Points)-1]) > .001 {
+		p.Points = append(p.Points, p.Points[0])
+	}
+	return Polygon{ID: p.ID, Points: p.Points}
+}
+
+// Translate moves each point in the polygon by the supplied dx and dy offset.
+func (p Polygon) Translate(dx, dy float64) Polygon {
+	translated := Polygon{ID: p.ID, Points: make([]Point, len(p.Points))}
+	for i, point := range p.Points {
+		translated.Points[i] = point.Translate(dx, dy)
+	}
+	return translated
+}
+
+// Rotate moves each point in the polygon around the supplied centre by the given angle in radians.
+func (p Polygon) Rotate(angle float64, centre Point) Polygon {
+	rotated := Polygon{ID: p.ID, Points: make([]Point, len(p.Points))}
+	for i, point := range p.Points {
+		rotated.Points[i] = point.Rotate(angle, centre)
+	}
+	return rotated
+}
+
+// Offset creates a new Polyline that is offset from the original Polyline by a specified distance.
+// The offset is applied perpendicular to the direction of the Polyline at each point.
+// A positive offset value moves the Polyline to the left, while a negative value moves it to the right.
+func (p Polyline) Offset(offset float64) Polyline {
+	if len(p.Points) < 2 {
+		return p
+	}
+
+	offsetPoints := make([]Point, len(p.Points))
+	for i := 0; i < len(p.Points); i++ {
+		var dx, dy float64
+		if i == 0 {
+			dx = p.Points[i+1].X - p.Points[i].X
+			dy = p.Points[i+1].Y - p.Points[i].Y
+		} else if i == len(p.Points)-1 {
+			dx = p.Points[i].X - p.Points[i-1].X
+			dy = p.Points[i].Y - p.Points[i-1].Y
+		} else {
+			dx = p.Points[i+1].X - p.Points[i-1].X
+			dy = p.Points[i+1].Y - p.Points[i-1].Y
+		}
+
+		length := math.Sqrt(dx*dx + dy*dy)
+		if length == 0 {
+			offsetPoints[i] = p.Points[i]
+			continue
+		}
+
+		// Normalize the direction vector and calculate the perpendicular offset
+		perpX := -dy / length
+		perpY := dx / length
+
+		offsetPoints[i] = Point{
+			X: p.Points[i].X + perpX*offset,
+			Y: p.Points[i].Y + perpY*offset,
+		}
+	}
+
+	return Polyline{
+		ID:     p.ID,
+		Points: offsetPoints,
+	}
+}
+
+func (q Polygon) offset(offset float64) Polygon {
+	if len(q.Points) < 2 {
+		return q
+	}
+	// N := len(q.Points)
+
+	qp := q.Points
+	qp = append(qp, qp[1], qp[2])
+
+	offsetPoints := make([]Point, len(qp))
+
+	for i := 0; i < len(qp); i++ {
+		prevIndex := (i - 1 + len(qp)) % len(qp)
+		nextIndex := (i + 1) % len(qp)
+
+		// Edge vectors
+		edge1 := Point{X: qp[i].X - qp[prevIndex].X, Y: qp[i].Y - qp[prevIndex].Y}
+		edge2 := Point{X: qp[nextIndex].X - qp[i].X, Y: qp[nextIndex].Y - qp[i].Y}
+
+		// Compute edge normals
+		normal1 := Point{X: -edge1.Y, Y: edge1.X}
+		normal2 := Point{X: -edge2.Y, Y: edge2.X}
+
+		// Normalize the normals
+		norm1Length := math.Sqrt(normal1.X*normal1.X + normal1.Y*normal1.Y)
+		norm2Length := math.Sqrt(normal2.X*normal2.X + normal2.Y*normal2.Y)
+		if norm1Length > 0 {
+			normal1.X /= norm1Length
+			normal1.Y /= norm1Length
+		}
+		if norm2Length > 0 {
+			normal2.X /= norm2Length
+			normal2.Y /= norm2Length
+		}
+
+		// Calculate average of normals for the offset
+		averageNormal := Point{
+			X: (normal1.X + normal2.X) / 2,
+			Y: (normal1.Y + normal2.Y) / 2,
+		}
+
+		// Normalize the average normal
+		averageNormalLength := math.Sqrt(averageNormal.X*averageNormal.X + averageNormal.Y*averageNormal.Y)
+		if averageNormalLength > 0 {
+			averageNormal.X /= averageNormalLength
+			averageNormal.Y /= averageNormalLength
+		}
+
+		// Create the offset point
+		offsetPoints[i] = Point{
+			X: qp[i].X + averageNormal.X*offset,
+			Y: qp[i].Y + averageNormal.Y*offset,
+		}
+	}
+
+	return Polygon{
+		ID:     q.ID,
+		Points: offsetPoints[1 : len(offsetPoints)-1],
+	}
+}
+
+// Area calculates the area of the Polygon using the shoelace formula. It iterates through the points of the polygon,
+// summing the cross products of adjacent points to compute the area. The result is divided by 2 to obtain the final area value.
+// It is a signed area, so the result will be negative if the points are ordered clockwise. The absolute value of the area can be taken if needed.
+func (p Polygon) Area() float64 {
+	area := 0.0
+	n := len(p.Points)
+	for i := 0; i < n; i++ {
+		j := (i + 1) % n
+		area += p.Points[i].X * p.Points[j].Y
+		area -= p.Points[j].X * p.Points[i].Y
+	}
+	return area / 2.0
+}
+
+// Perimeter calculates the perimeter of the Polygon by summing the distances between consecutive points.
+func (p Polygon) Perimeter() float64 {
+	perimeter := 0.0
+	n := len(p.Points)
+	for i := 0; i < n; i++ {
+		j := (i + 1) % n
+		dx := p.Points[j].X - p.Points[i].X
+		dy := p.Points[j].Y - p.Points[i].Y
+		perimeter += math.Sqrt(dx*dx + dy*dy)
+	}
+	return perimeter
+}
+
+// Centroid calculates the centroid (geometric center) of the Polygon.
+func (p Polygon) Centroid() Point {
+	centroid := Point{X: 0, Y: 0}
+	area := p.Area()
+	if area == 0 {
+		return centroid
+	}
+
+	n := len(p.Points)
+	for i := 0; i < n; i++ {
+		j := (i + 1) % n
+		factor := (p.Points[i].X*p.Points[j].Y - p.Points[j].X*p.Points[i].Y)
+		centroid.X += (p.Points[i].X + p.Points[j].X) * factor
+		centroid.Y += (p.Points[i].Y + p.Points[j].Y) * factor
+	}
+	centroid.X /= (6 * area)
+	centroid.Y /= (6 * area)
+
+	return centroid
+}
+
+// IsClockwise determines if the points of the Polygon are ordered in a clockwise direction.
+// It uses the area calculation to determine the orientation of the points. If the area is negative,
+// the points are ordered clockwise; if positive, they are ordered counter-clockwise.
+func (p Polygon) IsClockwise() bool {
+	return p.Area() < 0
+}
+
+// Reverse reverses the order of the points in the Polygon. This can be useful for changing the
+// orientation of the polygon from clockwise to counter-clockwise or vice versa.
+func (p Polygon) Reverse() Polygon {
+	q := Polygon{ID: p.ID, Points: make([]Point, len(p.Points))}
+	copy(q.Points, p.Points)
+	n := len(p.Points)
+	for i := 0; i < n/2; i++ {
+		j := n - 1 - i
+		p.Points[i], p.Points[j] = p.Points[j], p.Points[i]
+	}
+	return q
+}
+
+// BufferBy creates a new Polygon that is offset from the original Polygon by a specified distance.
+// The offset is applied perpendicular to the edges of the Polygon. A positive offset value moves the Polygon outward,
+// while a negative value moves it inward. If the Polygon is ordered clockwise, it will be reversed before applying the offset.
+func (p Polygon) BufferBy(r float64) Polygon {
+	if p.IsClockwise() {
+		p.Reverse()
+	}
+	return p.offset(-r)
 }

@@ -231,6 +231,22 @@ func (g *GeometryLayer) AttachTo(m *LayerManager) {
 
 // AddPolyline appends polyline to this layer and expands it into line segments
 // used by the renderer.
+func (gl *GeometryLayer) AddPolygon(polygon Polygon) {
+	gl.Polylines = append(gl.Polylines, NewPolyline(polygon.Points))
+	for i := 0; i < len(polygon.Points)-1; i++ {
+		line := Line{
+			X1: polygon.Points[i].X,
+			Y1: polygon.Points[i].Y,
+			X2: polygon.Points[i+1].X,
+			Y2: polygon.Points[i+1].Y,
+		}
+		gl.Lines = append(gl.Lines, line)
+	}
+	gl.invalidate()
+}
+
+// AddPolyline appends polyline to this layer and expands it into line segments
+// used by the renderer.
 func (gl *GeometryLayer) AddPolyline(polyline Polyline) {
 	gl.Polylines = append(gl.Polylines, polyline)
 	for i := 0; i < len(polyline.Points)-1; i++ {
