@@ -83,6 +83,10 @@ func (v *LayerManager) SetStatusChannel(ch chan string) {
 	}
 }
 
+// SetMode sets the interaction mode for the LayerManager, which can be used to control how mouse events are handled. 
+// The mode can be set to different values (e.g., ModeNone, ModeDraw, ModeMeasure, ModeIdentify) to enable or disable 
+// specific behaviors such as drawing, measuring distances, or identifying geometric shapes. When the mode is set to 
+// ModeIdentify, the LayerManager enables highlighting of the nearest points in the layers.
 func (v *LayerManager) SetMode(m Mode) {
 	v.mode = m
 	if m == ModeIdentify {
