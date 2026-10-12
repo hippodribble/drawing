@@ -16,6 +16,7 @@ type GeometryLayer struct {
 	Points                 []Point
 	Lines                  []Line
 	Polylines              []Polyline
+	Polygons               []Polygon
 	Projection             *Projection
 	statusChannel          chan string
 	StrokeWidth            float32
@@ -226,13 +227,12 @@ func (gl *GeometryLayer) SetFillColor(color color.Color) {
 
 func (g *GeometryLayer) AttachTo(m *LayerManager) {
 	m.AddLayer(g)
-	g.Projection = m.Projection()
 }
 
 // AddPolyline appends polyline to this layer and expands it into line segments
 // used by the renderer.
 func (gl *GeometryLayer) AddPolygon(polygon Polygon) {
-	gl.Polylines = append(gl.Polylines, NewPolyline(polygon.Points))
+	gl.Polygons = append(gl.Polygons, polygon)
 	for i := 0; i < len(polygon.Points)-1; i++ {
 		line := Line{
 			X1: polygon.Points[i].X,

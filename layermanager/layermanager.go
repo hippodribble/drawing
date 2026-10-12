@@ -90,6 +90,11 @@ func (v *LayerManager) SetMode(m Mode) {
 		for _, layer := range v.Layers {
 			layer.SetHighlightNearest(v.highlight)
 		}
+	} else {
+		v.highlight = false
+		for _, layer := range v.Layers {
+			layer.SetHighlightNearest(v.highlight)
+		}
 	}
 }
 
